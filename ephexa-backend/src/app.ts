@@ -72,7 +72,8 @@ if (process.env.NODE_ENV === 'production') {
     app.use(express.static(publicPath));
 
     // Handle SPA routing - serve index.html for all non-API routes
-    app.get('*', (req, res, next) => {
+    // Express 5 uses new path-to-regexp syntax: {*path} instead of *
+    app.get('/{*path}', (req, res, next) => {
         // Skip API routes and health check
         if (req.path.startsWith('/api') || req.path === '/health') {
             return next();
