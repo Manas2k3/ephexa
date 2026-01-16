@@ -60,12 +60,8 @@ COPY --from=frontend-builder /app/frontend/dist ./public
 # Set environment
 ENV NODE_ENV=production
 
-# Expose port (Railway uses PORT env var)
+# Expose port (Railway sets PORT dynamically)
 EXPOSE 3001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3001}/health || exit 1
-
-# Start the application
+# Start the application (Railway health check handled externally)
 CMD ["node", "dist/app.js"]
