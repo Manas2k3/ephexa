@@ -28,13 +28,19 @@ if (process.env.NODE_ENV !== 'production') {
 
 export async function connectDatabase(): Promise<void> {
     try {
-        // Test the pool connection directly
-        const client = await pool.connect();
+        // Test the pool connection directly with timeout
+        const client = await Promise.race([
+            pool.connect(),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Connection timeout')), 10000)
+            )
+        ]) as pg.PoolClient;
         client.release();
         console.log('✅ Database connected successfully');
     } catch (error) {
         console.error('❌ Database connection failed:', error);
-        console.log('💡 Make sure PostgreSQL is running and DATABASE_URL is set correctly');
+        console.log('💡 Server will continue - database will reconnect on first query');
+        // Don't throw - let server start and handle DB errors gracefully
     }
 }
 
