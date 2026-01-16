@@ -1,0 +1,211 @@
+import { useState, useEffect, useRef } from 'react';
+import { Layout } from '../components/layout';
+import { Button } from '../components/ui';
+import { ChatListItem, MessageBubble, MessageInput, TypingIndicator, NewChatModal, ReportModal } from '../components/chat';
+import { useChat } from '../hooks/useChat';
+import { useUIStore } from '../stores/uiStore';
+import { useChatStore } from '../stores/chatStore';
+import type { ReportReason } from '../types';
+
+export function Dashboard() {
+    const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const {
+        chatRooms,
+        activeRoom,
+        activeRoomId,
+        activeMessages,
+        activeTypingUsers,
+        isLoading,
+        createOrJoinChat,
+        leaveChatRoom,
+        selectRoom,
+        sendChatMessage,
+        setTyping,
+        reportUser,
+    } = useChat();
+
+    const {
+        isReportModalOpen,
+        reportTargetUserId,
+        reportTargetMessageId,
+        closeReportModal
+    } = useUIStore();
+
+    const { isConnected } = useChatStore();
+
+    // Scroll to bottom when new messages arrive
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [activeMessages]);
+
+    const handleReportSubmit = async (reason: ReportReason, description?: string) => {
+        if (!reportTargetUserId) return;
+
+        await reportUser({
+            reportedUserId: reportTargetUserId,
+            reason,
+            messageId: reportTargetMessageId || undefined,
+            description,
+        });
+    };
+
+    return (
+        <Layout hideFooter>
+            <div className="h-[calc(100vh-4rem)] flex">
+                {/* Sidebar - Chat List */}
+                <aside className="w-80 bg-navy-dark border-r border-indigo/30 flex flex-col">
+                    {/* Sidebar Header */}
+                    <div className="p-4 border-b border-indigo/30">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-semibold text-gray-100">Chats</h2>
+                            <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-gray-400'}`} />
+                                <span className="text-xs text-gray-400">
+                                    {isConnected ? 'Online' : 'Offline'}
+                                </span>
+                            </div>
+                        </div>
+                        <Button
+                            fullWidth
+                            onClick={() => setIsNewChatModalOpen(true)}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            New Chat
+                        </Button>
+                    </div>
+
+                    {/* Chat List */}
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                        {isLoading && chatRooms.length === 0 ? (
+                            <div className="flex items-center justify-center h-32">
+                                <div className="animate-spin w-6 h-6 border-2 border-sand border-t-transparent rounded-full" />
+                            </div>
+                        ) : chatRooms.length === 0 ? (
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo/30 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-400 text-sm">No chats yet</p>
+                                <p className="text-gray-500 text-xs mt-1">Start a new chat to begin</p>
+                            </div>
+                        ) : (
+                            chatRooms.map((room) => (
+                                <ChatListItem
+                                    key={room.id}
+                                    room={room}
+                                    isActive={room.id === activeRoomId}
+                                    onClick={() => selectRoom(room.id)}
+                                />
+                            ))
+                        )}
+                    </div>
+                </aside>
+
+                {/* Main Chat Area */}
+                <main className="flex-1 flex flex-col bg-navy">
+                    {activeRoom ? (
+                        <>
+                            {/* Chat Header */}
+                            <div className="px-6 py-4 border-b border-indigo/30 bg-navy-light">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className="font-semibold text-gray-100">{activeRoom.interest}</h2>
+                                        <p className="text-sm text-gray-400">
+                                            {activeRoom.participants.filter(p => p.isOnline).length} online • {activeRoom.participants.length} members
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => leaveChatRoom(activeRoom.id)}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Leave
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Messages */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {activeMessages.length === 0 ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo/30 flex items-center justify-center">
+                                                <svg className="w-8 h-8 text-sand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-gray-300">Start the conversation!</p>
+                                            <p className="text-gray-500 text-sm mt-1">Say hello to other members</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    activeMessages.map((message) => (
+                                        <MessageBubble key={message.id} message={message} />
+                                    ))
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* Typing Indicator */}
+                            <TypingIndicator typingUsers={activeTypingUsers} />
+
+                            {/* Message Input */}
+                            <MessageInput
+                                onSend={sendChatMessage}
+                                onTyping={setTyping}
+                                disabled={!isConnected}
+                            />
+                        </>
+                    ) : (
+                        // No Chat Selected
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-sand/20 to-blush/20 flex items-center justify-center">
+                                    <svg className="w-12 h-12 text-sand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <h2 className="text-xl font-semibold text-gray-100 mb-2">Select a Chat</h2>
+                                <p className="text-gray-400 mb-6">Choose a chat from the sidebar or start a new one</p>
+                                <Button onClick={() => setIsNewChatModalOpen(true)}>
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Start New Chat
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </div>
+
+            {/* Modals */}
+            <NewChatModal
+                isOpen={isNewChatModalOpen}
+                onClose={() => setIsNewChatModalOpen(false)}
+                onSelectInterest={async (interest) => {
+                    await createOrJoinChat(interest);
+                    setIsNewChatModalOpen(false);
+                }}
+                isLoading={isLoading}
+            />
+
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={closeReportModal}
+                onSubmit={handleReportSubmit}
+            />
+        </Layout>
+    );
+}

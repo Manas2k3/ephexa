@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?   // null for OAuth users
+  googleId      String?   @unique
+  dateOfBirth   DateTime
+  isAdult       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isBanned      Boolean   @default(false)
+  banExpiresAt  DateTime?
+  reportCount   Int       @default(0)
+  
+  sessions      Session[]
+  sentMessages  Message[] @relation("SentMessages")
+  chatRooms     ChatRoomUser[]
+  reports       Report[] @relation("Reporter")
+  reportedBy    Report[] @relation("Reported")
+  blockedUsers  Block[] @relation("Blocker")
+  blockedBy     Block[] @relation("Blocked")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipHash      String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  isActive    Boolean  @default(true)
+  
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ChatRoom {
+  id          String   @id @default(uuid())
+  name        String?
+  interest    String   // Interest-based matching
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime // TTL for auto-deletion
+  isActive    Boolean  @default(true)
+  
+  users       ChatRoomUser[]
+  messages    Message[]
+  
+  @@index([interest])
+  @@index([expiresAt])
+}
+
+model ChatRoomUser {
+  id         String   @id @default(uuid())
+  userId     String
+  chatRoomId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  joinedAt   DateTime @default(now())
+  isOnline   Boolean  @default(true)
+  lastSeenAt DateTime @default(now())
+  
+  @@unique([userId, chatRoomId])
+  @@index([chatRoomId])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  chatRoomId String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  
+  @@index([chatRoomId])
+  @@index([createdAt])
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  reporterId  String
+  reportedId  String
+  reason      String
+  messageId   String?
+  description String?
+  reporter    User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported    User         @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  status      ReportStatus @default(PENDING)
+  
+  @@index([reportedId])
+  @@index([status])
+}
+
+model Block {
+  id         String   @id @default(uuid())
+  blockerId  String
+  blockedId  String
+  blocker    User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked    User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}
