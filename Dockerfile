@@ -23,12 +23,13 @@ WORKDIR /app/backend
 # Copy backend package files
 COPY ephexa-backend/package*.json ./
 COPY ephexa-backend/prisma ./prisma/
+COPY ephexa-backend/prisma.config.ts ./
 
 # Install backend dependencies
 RUN npm ci
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client (using prisma.config.ts for Prisma 7)
+RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Copy backend source
 COPY ephexa-backend/ ./
@@ -45,9 +46,10 @@ WORKDIR /app
 COPY ephexa-backend/package*.json ./
 RUN npm ci --only=production
 
-# Copy Prisma schema and generate client
+# Copy Prisma schema and config, then generate client
 COPY ephexa-backend/prisma ./prisma/
-RUN npx prisma generate
+COPY ephexa-backend/prisma.config.ts ./
+RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Copy built backend
 COPY --from=backend-builder /app/backend/dist ./dist
