@@ -37,17 +37,18 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
     transports: ['websocket', 'polling'],
 });
 
-// Middleware - Helmet with CSP configured for Google OAuth
 app.use(helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com", "https://ssl.gstatic.com", "https://www.gstatic.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://fonts.googleapis.com", "https://ssl.gstatic.com", "https://www.gstatic.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            frameSrc: ["'self'", "https://accounts.google.com"],
-            connectSrc: ["'self'", "https://accounts.google.com", "wss:", "ws:"],
-            imgSrc: ["'self'", "data:", "https:", "blob:"],
+            frameSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com"],
+            connectSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com", "wss:", "ws:"],
+            imgSrc: ["'self'", "data:", "https:", "blob:", "https://ssl.gstatic.com", "https://www.gstatic.com", "https://lh3.googleusercontent.com"],
         },
     },
 }));
