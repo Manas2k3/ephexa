@@ -73,5 +73,6 @@ ENV NODE_ENV=production
 # Expose port (Railway sets PORT dynamically)
 EXPOSE 3001
 
-# Start the application (Railway health check handled externally)
-CMD ["node", "dist/app.js"]
+# Start the application with database migration
+# Using shell form to run prisma db push before starting the app
+CMD sh -c "npx prisma db push --schema=prisma/schema.prisma && node dist/app.js"
