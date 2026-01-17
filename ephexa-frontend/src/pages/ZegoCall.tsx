@@ -52,7 +52,7 @@ export function ZegoCall({ roomId, userId, userName, onEndCall }: ZegoCallProps)
                 showMyCameraToggleButton: true,
                 showMyMicrophoneToggleButton: true,
                 showAudioVideoSettingsButton: true,
-                showTextChat: false,
+                showTextChat: true,
                 showUserList: false,
                 maxUsers: 2,
                 layout: "Auto",
