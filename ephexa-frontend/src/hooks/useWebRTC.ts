@@ -164,8 +164,18 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
             console.log('Creating WebRTC offer...');
             const offer = await peerConnection.current.createOffer();
             console.log('Offer created, setting local description...');
-            await peerConnection.current.setLocalDescription(offer);
+            console.log('Current signaling state:', peerConnection.current.signalingState);
+
+            // Add timeout for setLocalDescription
+            const setLocalDescPromise = peerConnection.current.setLocalDescription(offer);
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('setLocalDescription timed out')), 5000)
+            );
+
+            await Promise.race([setLocalDescPromise, timeoutPromise]);
+
             console.log('Local description set, sending offer via socket...');
+            console.log('New signaling state:', peerConnection.current.signalingState);
             socketService.sendOffer({ type: 'offer', sdp: offer.sdp! });
             console.log('Offer sent to peer via signaling server');
         } catch (err) {
