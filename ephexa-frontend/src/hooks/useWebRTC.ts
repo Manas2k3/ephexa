@@ -146,12 +146,20 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
     // Create and send offer (initiator only)
     const createOffer = useCallback(async () => {
-        if (!peerConnection.current) return;
+        console.log('createOffer called, peerConnection:', !!peerConnection.current);
+        if (!peerConnection.current) {
+            console.error('No peer connection when trying to create offer!');
+            return;
+        }
 
         try {
+            console.log('Creating WebRTC offer...');
             const offer = await peerConnection.current.createOffer();
+            console.log('Offer created, setting local description...');
             await peerConnection.current.setLocalDescription(offer);
+            console.log('Local description set, sending offer via socket...');
             socketService.sendOffer({ type: 'offer', sdp: offer.sdp! });
+            console.log('Offer sent to peer via signaling server');
         } catch (err) {
             console.error('Error creating offer:', err);
             setError('Failed to create connection');
@@ -160,16 +168,23 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
     // Handle incoming offer
     const handleOffer = useCallback(async (sdp: RTCSessionDescriptionInit) => {
+        console.log('handleOffer called, peerConnection:', !!peerConnection.current);
         if (!peerConnection.current) {
+            console.log('No peer connection, getting local stream...');
             await getLocalStream();
             await createPeerConnection();
         }
 
         try {
+            console.log('Setting remote description (offer)...');
             await peerConnection.current!.setRemoteDescription(new RTCSessionDescription(sdp));
+            console.log('Creating answer...');
             const answer = await peerConnection.current!.createAnswer();
+            console.log('Setting local description (answer)...');
             await peerConnection.current!.setLocalDescription(answer);
+            console.log('Sending answer via socket...');
             socketService.sendAnswer({ type: 'answer', sdp: answer.sdp! });
+            console.log('Answer sent to peer');
         } catch (err) {
             console.error('Error handling offer:', err);
             setError('Failed to connect');
