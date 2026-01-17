@@ -44,12 +44,14 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com", "https://ssl.gstatic.com", "https://www.gstatic.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com", "https://apis.google.com", "https://ssl.gstatic.com", "https://www.gstatic.com", "*.zegocloud.com", "*.zego.im"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://fonts.googleapis.com", "https://ssl.gstatic.com", "https://www.gstatic.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
             frameSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com"],
-            connectSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com", "wss:", "ws:"],
+            connectSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com", "wss:", "ws:", "https:", "*"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://ssl.gstatic.com", "https://www.gstatic.com", "https://lh3.googleusercontent.com"],
+            mediaSrc: ["'self'", "blob:", "data:", "https:"],
+            workerSrc: ["'self'", "blob:"],
         },
     },
 }));
