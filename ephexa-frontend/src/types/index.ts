@@ -139,3 +139,44 @@ export const INTEREST_CATEGORIES = [
 ] as const;
 
 export type InterestCategory = typeof INTEREST_CATEGORIES[number];
+
+// ==========================================
+// WebRTC Video Call Types
+// ==========================================
+
+export type CallState =
+    | 'idle'           // Not in a call, not searching
+    | 'searching'      // Looking for a match
+    | 'connecting'     // Match found, establishing WebRTC
+    | 'connected'      // In active call
+    | 'ended';         // Call ended, can search again
+
+export interface CallFoundPayload {
+    callId: string;
+    peerId: string;
+    isInitiator: boolean;
+}
+
+export interface RTCSessionDescriptionInit {
+    type: 'offer' | 'answer';
+    sdp: string;
+}
+
+export interface RTCIceCandidateInit {
+    candidate: string;
+    sdpMLineIndex?: number | null;
+    sdpMid?: string | null;
+}
+
+// ICE Server configuration (STUN/TURN)
+export const ICE_SERVERS: RTCConfiguration = {
+    iceServers: [
+        // Google's free STUN servers
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        // Twilio's free STUN server
+        { urls: 'stun:global.stun.twilio.com:3478' },
+    ],
+};
+

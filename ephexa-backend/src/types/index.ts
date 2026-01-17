@@ -53,6 +53,24 @@ export interface TypingIndicator {
     isTyping: boolean;
 }
 
+// WebRTC Signaling Types
+export interface RTCSessionDescriptionInit {
+    type: 'offer' | 'answer';
+    sdp: string;
+}
+
+export interface RTCIceCandidateInit {
+    candidate: string;
+    sdpMLineIndex?: number | null;
+    sdpMid?: string | null;
+}
+
+export interface CallFoundPayload {
+    callId: string;
+    peerId: string;
+    isInitiator: boolean; // The initiator creates the offer
+}
+
 // Socket event types
 export interface ServerToClientEvents {
     message: (data: ChatMessage) => void;
@@ -63,6 +81,15 @@ export interface ServerToClientEvents {
     moderation_action: (data: { type: 'mute' | 'disconnect'; reason: string; duration?: number }) => void;
     online_status: (data: { userId: string; isOnline: boolean }) => void;
     error: (data: { message: string }) => void;
+
+    // WebRTC Call Events
+    searching_for_match: () => void;
+    call_found: (data: CallFoundPayload) => void;
+    call_ended: (data: { reason: string }) => void;
+    webrtc_offer: (data: { sdp: RTCSessionDescriptionInit }) => void;
+    webrtc_answer: (data: { sdp: RTCSessionDescriptionInit }) => void;
+    ice_candidate: (data: { candidate: RTCIceCandidateInit }) => void;
+    peer_disconnected: () => void;
 }
 
 export interface ClientToServerEvents {
@@ -70,6 +97,15 @@ export interface ClientToServerEvents {
     leave_room: (data: { roomId: string }) => void;
     send_message: (data: { roomId: string; content: string }) => void;
     typing: (data: { roomId: string; isTyping: boolean }) => void;
+
+    // WebRTC Call Events
+    find_call: (data: { interest?: string }) => void;
+    cancel_find: () => void;
+    end_call: () => void;
+    next_call: (data: { interest?: string }) => void;
+    webrtc_offer: (data: { sdp: RTCSessionDescriptionInit }) => void;
+    webrtc_answer: (data: { sdp: RTCSessionDescriptionInit }) => void;
+    ice_candidate: (data: { candidate: RTCIceCandidateInit }) => void;
 }
 
 export interface InterServerEvents {
@@ -80,3 +116,4 @@ export interface SocketData {
     userId: string;
     email: string;
 }
+

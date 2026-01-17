@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { verifyToken } from '../middleware/auth';
 import * as chatService from '../services/chatService';
 import * as moderationService from '../services/moderationService';
+import { callService } from '../services/callService';
 import { checkRateLimit, setUserOnline, setUserOffline, setUserSocket, deleteUserSocket } from '../config/redis';
 import { containsProfanity, cleanProfanity } from '../utils/profanityFilter';
 import { sanitizeInput, generateDisplayName } from '../utils/helpers';
@@ -44,6 +45,10 @@ export function setupSocketHandlers(
         // Set user as online
         await setUserOnline(userId);
         await setUserSocket(userId, socket.id);
+
+        // ==========================================
+        // CHAT ROOM HANDLERS
+        // ==========================================
 
         // Handle joining a room
         socket.on('join_room', async ({ roomId }) => {
@@ -124,6 +129,133 @@ export function setupSocketHandlers(
             });
         });
 
+        // ==========================================
+        // WEBRTC VIDEO CALL HANDLERS
+        // ==========================================
+
+        // Handle finding a call partner (Omegle-style random matching)
+        socket.on('find_call', ({ interest }) => {
+            console.log(`User ${userId} searching for call, interest: ${interest || 'any'}`);
+
+            // First, end any existing call
+            const existingCall = callService.getCallBySocket(socket.id);
+            if (existingCall) {
+                const peerSocketId = callService.getPeerSocketId(socket.id);
+                callService.endCall(socket.id);
+                if (peerSocketId) {
+                    io.to(peerSocketId).emit('call_ended', { reason: 'Peer left' });
+                }
+            }
+
+            // Add to matching queue
+            callService.addToQueue(socket.id, userId, interest);
+            socket.emit('searching_for_match');
+
+            // Try to find a match
+            const match = callService.findMatch(socket.id, interest);
+
+            if (match) {
+                // Found a match! Create the call
+                const call = callService.createCall(socket.id, userId, match.socketId, match.userId);
+
+                console.log(`Match found! Call ${call.id} between ${userId} and ${match.userId}`);
+
+                // Notify both users - the second user (match) is the initiator (creates the offer)
+                socket.emit('call_found', {
+                    callId: call.id,
+                    peerId: match.userId,
+                    isInitiator: false,
+                });
+
+                io.to(match.socketId).emit('call_found', {
+                    callId: call.id,
+                    peerId: userId,
+                    isInitiator: true, // This user creates the WebRTC offer
+                });
+            }
+        });
+
+        // Handle canceling find
+        socket.on('cancel_find', () => {
+            console.log(`User ${userId} canceled call search`);
+            callService.removeFromQueue(socket.id);
+        });
+
+        // Handle ending current call
+        socket.on('end_call', () => {
+            console.log(`User ${userId} ended call`);
+
+            const peerSocketId = callService.getPeerSocketId(socket.id);
+            const call = callService.endCall(socket.id);
+
+            if (call && peerSocketId) {
+                io.to(peerSocketId).emit('call_ended', { reason: 'Peer ended the call' });
+            }
+        });
+
+        // Handle "next" (skip to next random stranger)
+        socket.on('next_call', ({ interest }) => {
+            console.log(`User ${userId} wants next call`);
+
+            // End current call
+            const peerSocketId = callService.getPeerSocketId(socket.id);
+            const call = callService.endCall(socket.id);
+
+            if (call && peerSocketId) {
+                io.to(peerSocketId).emit('call_ended', { reason: 'Peer skipped' });
+            }
+
+            // Start searching again (this triggers the find_call logic)
+            callService.addToQueue(socket.id, userId, interest);
+            socket.emit('searching_for_match');
+
+            const match = callService.findMatch(socket.id, interest);
+
+            if (match) {
+                const newCall = callService.createCall(socket.id, userId, match.socketId, match.userId);
+
+                socket.emit('call_found', {
+                    callId: newCall.id,
+                    peerId: match.userId,
+                    isInitiator: false,
+                });
+
+                io.to(match.socketId).emit('call_found', {
+                    callId: newCall.id,
+                    peerId: userId,
+                    isInitiator: true,
+                });
+            }
+        });
+
+        // WebRTC Signaling: Relay offer to peer
+        socket.on('webrtc_offer', ({ sdp }) => {
+            const peerSocketId = callService.getPeerSocketId(socket.id);
+            if (peerSocketId) {
+                io.to(peerSocketId).emit('webrtc_offer', { sdp });
+            }
+        });
+
+        // WebRTC Signaling: Relay answer to peer
+        socket.on('webrtc_answer', ({ sdp }) => {
+            const peerSocketId = callService.getPeerSocketId(socket.id);
+            if (peerSocketId) {
+                io.to(peerSocketId).emit('webrtc_answer', { sdp });
+            }
+        });
+
+        // WebRTC Signaling: Relay ICE candidate to peer
+        socket.on('ice_candidate', ({ candidate }) => {
+            const peerSocketId = callService.getPeerSocketId(socket.id);
+            if (peerSocketId) {
+                io.to(peerSocketId).emit('ice_candidate', { candidate });
+            }
+        });
+
+        // ==========================================
+        // DISCONNECTION HANDLER
+        // ==========================================
+
         // Handle disconnection
         socket.on('disconnect', async () => {
             console.log(`User disconnected: ${userId}`);
@@ -132,7 +264,18 @@ export function setupSocketHandlers(
             await setUserOffline(userId);
             await deleteUserSocket(userId);
 
-            // Notify all rooms the user was in
+            // Handle call cleanup
+            const { call, wasInQueue } = callService.handleDisconnect(socket.id);
+            if (call) {
+                // Notify the peer that we disconnected
+                const peerSocketId = call.user1.socketId === socket.id
+                    ? call.user2.socketId
+                    : call.user1.socketId;
+                io.to(peerSocketId).emit('peer_disconnected');
+                io.to(peerSocketId).emit('call_ended', { reason: 'Peer disconnected' });
+            }
+
+            // Notify all chat rooms the user was in
             const rooms = Array.from(socket.rooms).filter(r => r !== socket.id);
 
             for (const roomId of rooms) {
@@ -143,3 +286,4 @@ export function setupSocketHandlers(
         });
     });
 }
+

@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
+import { VideoCall } from './pages/VideoCall';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
@@ -98,6 +99,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/call"
+            element={
+              <ProtectedRoute>
+                <VideoCall />
               </ProtectedRoute>
             }
           />
