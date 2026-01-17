@@ -12,7 +12,15 @@ const connectionString = process.env.DATABASE_URL || 'postgresql://localhost:543
 console.log('📂 Database URL:', connectionString.replace(/\/\/[^:]+:[^@]+@/, '//<hidden>@'));
 
 // Create PostgreSQL connection pool  
-const pool = globalThis.pgPool || new pg.Pool({ connectionString });
+const isProduction = process.env.NODE_ENV === 'production';
+const pool = globalThis.pgPool || new pg.Pool({
+    connectionString,
+    ...(isProduction && {
+        ssl: {
+            rejectUnauthorized: false
+        }
+    })
+});
 globalThis.pgPool = pool;
 
 const adapter = new PrismaPg(pool);
