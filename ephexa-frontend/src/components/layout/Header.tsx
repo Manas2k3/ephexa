@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
@@ -7,6 +8,7 @@ export function Header() {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuthStore();
     const { isConnected } = useChatStore();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
         <header className="sticky top-0 z-40 glass-dark">
@@ -22,26 +24,99 @@ export function Header() {
                         <span className="text-xl font-bold text-gray-100">EPHEXA</span>
                     </Link>
 
-                    {/* Navigation */}
+                    {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-6">
+                        {isAuthenticated ? (
+                            <>
+                                <Link to="/dashboard" className="text-gray-300 hover:text-gray-100 transition-colors">
+                                    Dashboard
+                                </Link>
+                                <Link to="/settings" className="text-gray-300 hover:text-gray-100 transition-colors">
+                                    Settings
+                                </Link>
+                                <div className="flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-gray-400'}`} />
+                                    <span className="text-sm text-gray-400">
+                                        {isConnected ? 'Connected' : 'Disconnected'}
+                                    </span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/terms" className="text-gray-300 hover:text-gray-100 transition-colors">
+                                    Terms
+                                </Link>
+                                <Link to="/privacy" className="text-gray-300 hover:text-gray-100 transition-colors">
+                                    Privacy
+                                </Link>
+                            </>
+                        )}
+                    </nav>
+
+                    {/* Auth Buttons & Mobile Toggle */}
+                    <div className="flex items-center gap-3">
+                        {isAuthenticated ? (
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => navigate('/settings')}
+                                className="hidden md:flex"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>Account</span>
+                            </Button>
+                        ) : (
+                            <div className="hidden md:flex items-center gap-3">
+                                <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+                                    Log In
+                                </Button>
+                                <Button variant="primary" size="sm" onClick={() => navigate('/signup')}>
+                                    Sign Up
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="md:hidden p-2 text-gray-300 hover:text-gray-100"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {isMenuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Menu */}
+            {isMenuOpen && (
+                <div className="md:hidden bg-navy-dark border-t border-indigo/30">
+                    <div className="px-4 pt-2 pb-4 space-y-1">
                         {isAuthenticated ? (
                             <>
                                 <Link
                                     to="/dashboard"
-                                    className="text-gray-300 hover:text-gray-100 transition-colors"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                                    onClick={() => setIsMenuOpen(false)}
                                 >
                                     Dashboard
                                 </Link>
                                 <Link
                                     to="/settings"
-                                    className="text-gray-300 hover:text-gray-100 transition-colors"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                                    onClick={() => setIsMenuOpen(false)}
                                 >
                                     Settings
                                 </Link>
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-gray-400'}`}
-                                    />
+                                <div className="px-3 py-2 flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-gray-400'}`} />
                                     <span className="text-sm text-gray-400">
                                         {isConnected ? 'Connected' : 'Disconnected'}
                                     </span>
@@ -50,55 +125,38 @@ export function Header() {
                         ) : (
                             <>
                                 <Link
+                                    to="/login"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Log In
+                                </Link>
+                                <Link
+                                    to="/signup"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Sign Up
+                                </Link>
+                                <Link
                                     to="/terms"
-                                    className="text-gray-300 hover:text-gray-100 transition-colors"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                                    onClick={() => setIsMenuOpen(false)}
                                 >
                                     Terms
                                 </Link>
                                 <Link
                                     to="/privacy"
-                                    className="text-gray-300 hover:text-gray-100 transition-colors"
+                                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                                    onClick={() => setIsMenuOpen(false)}
                                 >
                                     Privacy
                                 </Link>
                             </>
                         )}
-                    </nav>
-
-                    {/* Auth Buttons */}
-                    <div className="flex items-center gap-3">
-                        {isAuthenticated ? (
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => navigate('/settings')}
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span className="hidden sm:inline">Account</span>
-                            </Button>
-                        ) : (
-                            <>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => navigate('/login')}
-                                >
-                                    Log In
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    onClick={() => navigate('/signup')}
-                                >
-                                    Sign Up
-                                </Button>
-                            </>
-                        )}
                     </div>
                 </div>
-            </div>
+            )}
         </header>
     );
 }

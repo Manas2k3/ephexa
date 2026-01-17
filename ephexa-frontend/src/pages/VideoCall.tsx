@@ -114,7 +114,7 @@ export function VideoCall() {
                         </p>
                     </div>
 
-                    <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
+                    <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
                         {/* Interest Selection */}
                         <div className="space-y-3 text-left">
                             <label className="text-sm font-medium text-gray-700 block">
