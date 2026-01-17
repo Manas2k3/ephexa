@@ -18,6 +18,7 @@ const socket_1 = require("./socket");
 const auth_1 = __importDefault(require("./routes/auth"));
 const chat_1 = __importDefault(require("./routes/chat"));
 const user_1 = __importDefault(require("./routes/user"));
+const friends_1 = __importDefault(require("./routes/friends"));
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 // Socket.IO setup
@@ -66,6 +67,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', auth_1.default);
 app.use('/api/chats', chat_1.default);
 app.use('/api/users', user_1.default);
+app.use('/api/friends', friends_1.default);
 // Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {
     const publicPath = path_1.default.join(__dirname, '../public');

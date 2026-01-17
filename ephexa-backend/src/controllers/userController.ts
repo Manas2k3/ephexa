@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as moderationService from '../services/moderationService';
 import * as authService from '../services/authService';
+import * as userService from '../services/userService';
 import type { ReportBody } from '../types';
 
 export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -24,10 +25,23 @@ export async function updateMe(req: Request, res: Response, next: NextFunction):
             return;
         }
 
-        // Currently, users can't update much - profile is minimal for privacy
-        res.json({ message: 'Profile updated' });
+        const { username } = req.body;
+
+        if (username) {
+            const updatedUser = await userService.updateUsername(req.userId, username);
+            res.json(updatedUser);
+            return;
+        }
+
+        res.json({ message: 'No changes made' });
     } catch (error) {
-        next(error);
+        if (error instanceof Error && error.message.includes('taken')) {
+            res.status(409).json({ error: error.message });
+        } else if (error instanceof Error) {
+            res.status(400).json({ error: error.message });
+        } else {
+            next(error);
+        }
     }
 }
 

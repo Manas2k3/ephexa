@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../stores/uiStore';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
-import type { LoginCredentials, SignupData } from '../types';
+import type { LoginCredentials, SignupData, User } from '../types';
 
 export function useAuth() {
     const navigate = useNavigate();
@@ -13,6 +13,7 @@ export function useAuth() {
         token,
         isAuthenticated,
         isLoading,
+        setUser,
         login: setLogin,
         logout: setLogout,
         setLoading,
@@ -25,17 +26,27 @@ export function useAuth() {
         const initAuth = async () => {
             if (token) {
                 api.setToken(token);
+                // We should ideally fetch current user to validate token and get fresh data
+                // but doing it on every mount might be expensive if this hook is used multiple times.
+                // It's meant to be used once in layout or top level, or check if user is already loaded?
+                // For now, keep existing logic but maybe consider avoiding double fetch if user exists?
+                // The implementation fetches if token exists.
                 const response = await api.getCurrentUser();
                 if (!response.success) {
                     setLogout();
                     api.setToken(null);
+                } else if (response.data) {
+                    // Update user store with fresh data
+                    setUser(response.data);
                 }
             }
             setLoading(false);
         };
 
+        // Only run if we have a token but maybe not validated?
+        // Simulating "on mount" or token change
         initAuth();
-    }, [token, setLoading, setLogout]);
+    }, [token, setLoading, setLogout, setUser]);
 
     const login = useCallback(async (credentials: LoginCredentials): Promise<boolean> => {
         setLoading(true);
@@ -113,6 +124,24 @@ export function useAuth() {
         }
     }, [setLogout, addToast, navigate]);
 
+    const updateProfile = useCallback(async (data: Partial<User>): Promise<boolean> => {
+        setLoading(true);
+        const response = await api.updateProfile(data);
+
+        if (response.success && response.data) {
+            // Merge existing user data with updates
+            const updatedUser = { ...user, ...response.data } as User;
+            setUser(updatedUser);
+            addToast({ type: 'success', message: 'Profile updated successfully' });
+            setLoading(false);
+            return true;
+        } else {
+            addToast({ type: 'error', message: response.error || 'Failed to update profile' });
+            setLoading(false);
+            return false;
+        }
+    }, [user, setUser, setLoading, addToast]);
+
     return {
         user,
         token,
@@ -123,5 +152,6 @@ export function useAuth() {
         googleLogin,
         logout,
         deleteAccount,
+        updateProfile,
     };
 }

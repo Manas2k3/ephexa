@@ -41,6 +41,7 @@ exports.reportUser = reportUser;
 exports.getBlockedUsers = getBlockedUsers;
 const moderationService = __importStar(require("../services/moderationService"));
 const authService = __importStar(require("../services/authService"));
+const userService = __importStar(require("../services/userService"));
 async function getMe(req, res, next) {
     try {
         if (!req.userId) {
@@ -60,11 +61,24 @@ async function updateMe(req, res, next) {
             res.status(401).json({ error: 'Authentication required' });
             return;
         }
-        // Currently, users can't update much - profile is minimal for privacy
-        res.json({ message: 'Profile updated' });
+        const { username } = req.body;
+        if (username) {
+            const updatedUser = await userService.updateUsername(req.userId, username);
+            res.json(updatedUser);
+            return;
+        }
+        res.json({ message: 'No changes made' });
     }
     catch (error) {
-        next(error);
+        if (error instanceof Error && error.message.includes('taken')) {
+            res.status(409).json({ error: error.message });
+        }
+        else if (error instanceof Error) {
+            res.status(400).json({ error: error.message });
+        }
+        else {
+            next(error);
+        }
     }
 }
 async function blockUser(req, res, next) {

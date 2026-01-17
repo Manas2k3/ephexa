@@ -29,6 +29,7 @@ export declare function googleAuth(credential: string, ipAddress: string): Promi
 export declare function getCurrentUser(userId: string): Promise<{
     id: string;
     email: string;
+    username: string | null;
     isAdult: boolean;
     createdAt: string;
 }>;

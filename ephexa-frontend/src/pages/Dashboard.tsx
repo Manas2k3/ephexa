@@ -6,9 +6,11 @@ import { useChat } from '../hooks/useChat';
 import { useUIStore } from '../stores/uiStore';
 import { useChatStore } from '../stores/chatStore';
 import type { ReportReason } from '../types';
+import { FriendsList } from '../components/friends/FriendsList';
 
 export function Dashboard() {
     const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+    const [sidebarTab, setSidebarTab] = useState<'chats' | 'friends'>('chats');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -54,71 +56,95 @@ export function Dashboard() {
     return (
         <Layout hideFooter>
             <div className="h-[calc(100vh-4rem)] flex flex-row relative overflow-hidden">
-                {/* Sidebar - Chat List */}
+                {/* Sidebar */}
                 <aside className={`
                     w-full md:w-80 bg-navy-dark border-r border-indigo/30 flex flex-col z-10
                     ${activeRoomId ? 'hidden md:flex' : 'flex'}
                 `}>
-                    {/* Sidebar Header */}
-                    <div className="p-4 border-b border-indigo/30">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-semibold text-gray-100">Chats</h2>
-                            <div className="flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-gray-400'}`} />
-                                <span className="text-xs text-gray-400">
-                                    {isConnected ? 'Online' : 'Offline'}
-                                </span>
-                            </div>
-                        </div>
-                        <Button
-                            fullWidth
-                            onClick={() => setIsNewChatModalOpen(true)}
+                    {/* Tab Switcher */}
+                    <div className="flex border-b border-indigo/30">
+                        <button
+                            className={`flex-1 py-3 text-sm font-medium transition-colors ${sidebarTab === 'chats' ? 'text-sand border-b-2 border-sand bg-white/5' : 'text-gray-400 hover:text-gray-200'}`}
+                            onClick={() => setSidebarTab('chats')}
                         >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            New Chat
-                        </Button>
-                        <Button
-                            fullWidth
-                            variant="secondary"
-                            onClick={() => window.location.href = '/call'}
-                            className="mt-2"
+                            Chats
+                        </button>
+                        <button
+                            className={`flex-1 py-3 text-sm font-medium transition-colors ${sidebarTab === 'friends' ? 'text-sand border-b-2 border-sand bg-white/5' : 'text-gray-400 hover:text-gray-200'}`}
+                            onClick={() => setSidebarTab('friends')}
                         >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Video Call
-                        </Button>
+                            Friends
+                        </button>
                     </div>
 
-                    {/* Chat List */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                        {isLoading && chatRooms.length === 0 ? (
-                            <div className="flex items-center justify-center h-32">
-                                <div className="animate-spin w-6 h-6 border-2 border-sand border-t-transparent rounded-full" />
-                            </div>
-                        ) : chatRooms.length === 0 ? (
-                            <div className="text-center py-8">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo/30 flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
+                    {sidebarTab === 'friends' ? (
+                        <div className="flex-1 overflow-hidden">
+                            <FriendsList />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Sidebar Header (Chats) */}
+                            <div className="p-4 border-b border-indigo/30">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-lg font-semibold text-gray-100">Chats</h2>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-gray-400'}`} />
+                                        <span className="text-xs text-gray-400">
+                                            {isConnected ? 'Online' : 'Offline'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <p className="text-gray-400">No chats yet</p>
-                                <p className="text-sm text-gray-500">Start a new conversation!</p>
+                                <Button
+                                    fullWidth
+                                    onClick={() => setIsNewChatModalOpen(true)}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    New Chat
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    variant="secondary"
+                                    onClick={() => window.location.href = '/call'}
+                                    className="mt-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    Video Call
+                                </Button>
                             </div>
-                        ) : (
-                            chatRooms.map(room => (
-                                <ChatListItem
-                                    key={room.id}
-                                    room={room}
-                                    isActive={activeRoom?.id === room.id}
-                                    onClick={() => selectRoom(room.id)}
-                                />
-                            ))
-                        )}
-                    </div>
+
+                            {/* Chat List */}
+                            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                                {isLoading && chatRooms.length === 0 ? (
+                                    <div className="flex items-center justify-center h-32">
+                                        <div className="animate-spin w-6 h-6 border-2 border-sand border-t-transparent rounded-full" />
+                                    </div>
+                                ) : chatRooms.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo/30 flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-gray-400">No chats yet</p>
+                                        <p className="text-sm text-gray-500">Start a new conversation!</p>
+                                    </div>
+                                ) : (
+                                    chatRooms.map(room => (
+                                        <ChatListItem
+                                            key={room.id}
+                                            room={room}
+                                            isActive={activeRoom?.id === room.id}
+                                            onClick={() => selectRoom(room.id)}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </>
+                    )}
                 </aside>
 
                 {/* Main Chat Area */}

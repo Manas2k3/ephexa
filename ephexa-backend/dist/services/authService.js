@@ -196,6 +196,7 @@ async function getCurrentUser(userId) {
     return {
         id: user.id,
         email: user.email,
+        username: user.username,
         isAdult: user.isAdult,
         createdAt: user.createdAt.toISOString(),
     };

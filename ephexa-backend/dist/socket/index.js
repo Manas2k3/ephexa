@@ -220,39 +220,6 @@ function setupSocketHandlers(io) {
                 });
             }
         });
-        // WebRTC Signaling: Relay offer to peer
-        socket.on('webrtc_offer', ({ sdp }) => {
-            console.log(`Relaying WebRTC offer from ${socket.id}`);
-            const peerSocketId = callService_1.callService.getPeerSocketId(socket.id);
-            console.log(`Peer socket ID: ${peerSocketId}`);
-            if (peerSocketId) {
-                console.log(`Sending offer to peer ${peerSocketId}`);
-                io.to(peerSocketId).emit('webrtc_offer', { sdp });
-            }
-            else {
-                console.error('No peer found to relay offer to!');
-            }
-        });
-        // WebRTC Signaling: Relay answer to peer
-        socket.on('webrtc_answer', ({ sdp }) => {
-            console.log(`Relaying WebRTC answer from ${socket.id}`);
-            const peerSocketId = callService_1.callService.getPeerSocketId(socket.id);
-            console.log(`Peer socket ID: ${peerSocketId}`);
-            if (peerSocketId) {
-                console.log(`Sending answer to peer ${peerSocketId}`);
-                io.to(peerSocketId).emit('webrtc_answer', { sdp });
-            }
-            else {
-                console.error('No peer found to relay answer to!');
-            }
-        });
-        // WebRTC Signaling: Relay ICE candidate to peer
-        socket.on('ice_candidate', ({ candidate }) => {
-            const peerSocketId = callService_1.callService.getPeerSocketId(socket.id);
-            if (peerSocketId) {
-                io.to(peerSocketId).emit('ice_candidate', { candidate });
-            }
-        });
         // ==========================================
         // DISCONNECTION HANDLER
         // ==========================================

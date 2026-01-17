@@ -6,7 +6,8 @@ import type {
     ChatRoom,
     Report,
     PaginatedResponse,
-    Message
+    Message,
+    Friend
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -146,6 +147,38 @@ class ApiService {
 
     async getBlockedUsers(): Promise<ApiResponse<{ id: string; blockedAt: string }[]>> {
         return this.request('/api/users/blocked');
+    }
+
+    // Friend endpoints
+    async getFriends(): Promise<ApiResponse<Friend[]>> {
+        return this.request('/api/friends');
+    }
+
+    async sendFriendRequest(usernameOrEmail: string): Promise<ApiResponse<void>> {
+        return this.request('/api/friends/request', {
+            method: 'POST',
+            body: JSON.stringify({ usernameOrEmail }),
+        });
+    }
+
+    async respondToFriendRequest(requestId: string, accept: boolean): Promise<ApiResponse<void>> {
+        return this.request('/api/friends/respond', {
+            method: 'POST',
+            body: JSON.stringify({ requestId, accept }),
+        });
+    }
+
+    async updateFriendAlias(friendId: string, alias: string): Promise<ApiResponse<void>> {
+        return this.request(`/api/friends/${friendId}/alias`, {
+            method: 'PATCH',
+            body: JSON.stringify({ alias }),
+        });
+    }
+
+    async removeFriend(friendId: string): Promise<ApiResponse<void>> {
+        return this.request(`/api/friends/${friendId}`, {
+            method: 'DELETE',
+        });
     }
 }
 
