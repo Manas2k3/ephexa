@@ -14,7 +14,7 @@ export function FriendsList() {
 
     // UI State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [filter, setFilter] = useState<'all' | 'online' | 'pending'>('online');
+    const [filter] = useState<'all' | 'online' | 'pending'>('online');
 
     useEffect(() => {
         fetchFriends();
@@ -24,7 +24,7 @@ export function FriendsList() {
     const myFriends = friends.filter(f => f.status === 'ACCEPTED');
 
     // Filter display friends
-    const displayFriends = myFriends.filter(f => {
+    const displayFriends = myFriends.filter(_f => {
         if (filter === 'online') {
             // Note: checking online status might require more realtime logic (socket)
             // For now assume "status" prop is friendship status, not online status
@@ -54,7 +54,7 @@ export function FriendsList() {
         }
     };
 
-    const handleMessage = async (friendId: string) => {
+    const handleMessage = async (_friendId: string) => {
         // Logic to jump to chat with friend
         // This is complex if we don't have a direct "start chat with user" API.
         // Current chat model is "Rooms" based on interest.
