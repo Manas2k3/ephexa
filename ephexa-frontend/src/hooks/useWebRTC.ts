@@ -133,13 +133,21 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
         // Handle ICE candidates
         pc.onicecandidate = (event) => {
             if (event.candidate) {
+                console.log('Gathered ICE candidate:', event.candidate.type, event.candidate.address);
                 const candidateInit = event.candidate.toJSON();
                 socketService.sendIceCandidate({
                     candidate: candidateInit.candidate || '',
                     sdpMLineIndex: candidateInit.sdpMLineIndex,
                     sdpMid: candidateInit.sdpMid,
                 });
+            } else {
+                console.log('ICE gathering complete');
             }
+        };
+
+        // Handle ICE errors
+        pc.onicecandidateerror = (event: any) => { // Type 'RTCPeerConnectionIceErrorEvent' is not standard in all TS lib
+            console.error('ICE Candidate Error:', event.errorText || event);
         };
 
         // Handle connection state
