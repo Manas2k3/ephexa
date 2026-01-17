@@ -298,7 +298,10 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
             if (data.isInitiator) {
                 // Initiator creates the offer
+                console.log('I am initiator, creating offer...');
                 await createOffer();
+            } else {
+                console.log('I am not initiator, waiting for offer...');
             }
         };
 
@@ -312,6 +315,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
         // Handle peer disconnected
         const handlePeerDisconnected = () => {
+            console.log('Peer disconnected');
             cleanup();
             setCallState('ended');
             options.onCallEnded?.('Peer disconnected');
@@ -319,22 +323,26 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
         // Handle searching
         const handleSearching = () => {
+            console.log('Searching for match...');
             setCallState('searching');
         };
 
-        // Handle WebRTC offer
-        const handleWebRTCOffer = (data: { sdp: RTCSessionDescriptionInit }) => {
-            handleOffer(data.sdp);
+        // Handle WebRTC offer - MUST be async
+        const handleWebRTCOffer = async (data: { sdp: RTCSessionDescriptionInit }) => {
+            console.log('Received WebRTC offer');
+            await handleOffer(data.sdp);
         };
 
-        // Handle WebRTC answer
-        const handleWebRTCAnswer = (data: { sdp: RTCSessionDescriptionInit }) => {
-            handleAnswer(data.sdp);
+        // Handle WebRTC answer - MUST be async
+        const handleWebRTCAnswer = async (data: { sdp: RTCSessionDescriptionInit }) => {
+            console.log('Received WebRTC answer');
+            await handleAnswer(data.sdp);
         };
 
-        // Handle ICE candidate
-        const handleICECandidate = (data: { candidate: RTCIceCandidateInit }) => {
-            handleIceCandidate(data.candidate);
+        // Handle ICE candidate - MUST be async
+        const handleICECandidate = async (data: { candidate: RTCIceCandidateInit }) => {
+            console.log('Received ICE candidate');
+            await handleIceCandidate(data.candidate);
         };
 
         // Register event listeners
