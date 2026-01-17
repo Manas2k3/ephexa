@@ -3,6 +3,16 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
+# Build arguments for environment variables needed at build time
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_API_URL=https://ephexa.me
+ARG VITE_SOCKET_URL=https://ephexa.me
+
+# Set environment variables for Vite build
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
+
 # Copy frontend package files
 COPY ephexa-frontend/package*.json ./
 

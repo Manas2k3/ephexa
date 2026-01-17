@@ -37,8 +37,19 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
     transports: ['websocket', 'polling'],
 });
 
-// Middleware
-app.use(helmet());
+// Middleware - Helmet with CSP configured for Google OAuth
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+            frameSrc: ["'self'", "https://accounts.google.com"],
+            connectSrc: ["'self'", "https://accounts.google.com", "wss:", "ws:"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
+        },
+    },
+}));
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
