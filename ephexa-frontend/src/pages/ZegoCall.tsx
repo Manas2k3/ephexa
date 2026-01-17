@@ -75,6 +75,7 @@ export function ZegoCall({ roomId, userId, userName, onEndCall }: ZegoCallProps)
         return () => {
             if (zpRef.current) {
                 zpRef.current.destroy();
+                zpRef.current = null;
             }
         };
     }, []);

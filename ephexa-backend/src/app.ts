@@ -39,7 +39,8 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 });
 
 app.use(helmet({
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginEmbedderPolicy: { policy: "require-corp" },
+    crossOriginOpenerPolicy: { policy: "same-origin" },
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     contentSecurityPolicy: {
         directives: {
@@ -52,6 +53,7 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://ssl.gstatic.com", "https://www.gstatic.com", "https://lh3.googleusercontent.com"],
             mediaSrc: ["'self'", "blob:", "data:", "https:"],
             workerSrc: ["'self'", "blob:"],
+            childSrc: ["'self'", "blob:"],
         },
     },
 }));
