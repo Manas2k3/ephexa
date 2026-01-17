@@ -15,7 +15,6 @@ import { setupSocketHandlers } from './socket';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
 import userRoutes from './routes/user';
-import friendRoutes from './routes/friends';
 
 // Types
 import type {
@@ -44,15 +43,12 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com", "https://apis.google.com", "https://ssl.gstatic.com", "https://www.gstatic.com", "*.zegocloud.com", "*.zego.im", "https://cdnjs.cloudflare.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://fonts.googleapis.com", "https://ssl.gstatic.com", "https://www.gstatic.com", "https://cdnjs.cloudflare.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "data:", "https://cdnjs.cloudflare.com"],
+            scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com", "https://ssl.gstatic.com", "https://www.gstatic.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://fonts.googleapis.com", "https://ssl.gstatic.com", "https://www.gstatic.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
             frameSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com"],
-            connectSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com", "wss:", "ws:", "https:", "*"],
+            connectSrc: ["'self'", "https://accounts.google.com", "https://gsi.client-channel.google.com", "wss:", "ws:"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://ssl.gstatic.com", "https://www.gstatic.com", "https://lh3.googleusercontent.com"],
-            mediaSrc: ["'self'", "blob:", "data:", "https:"],
-            workerSrc: ["'self'", "blob:"],
-            childSrc: ["'self'", "blob:"],
         },
     },
 }));
@@ -82,7 +78,6 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/friends', friendRoutes);
 
 // Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {

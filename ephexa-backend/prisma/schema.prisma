@@ -29,34 +29,6 @@ model User {
   reportedBy    Report[] @relation("Reported")
   blockedUsers  Block[] @relation("Blocker")
   blockedBy     Block[] @relation("Blocked")
-  
-  // Friends
-  username      String?   @unique
-  sentFriendRequests     Friendship[] @relation("FriendshipRequester")
-  receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
-}
-
-model Friendship {
-  id               String           @id @default(uuid())
-  requesterId      String
-  addresseeId      String
-  status           FriendshipStatus @default(PENDING)
-  aliasByRequester String?          // Alias set by requester for addressee
-  aliasByAddressee String?          // Alias set by addressee for requester
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  requester        User     @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
-  addressee        User     @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
-
-  @@unique([requesterId, addresseeId])
-  @@index([requesterId])
-  @@index([addresseeId])
-}
-
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
 }
 
 model Session {

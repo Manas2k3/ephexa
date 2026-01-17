@@ -2,29 +2,13 @@
 export interface User {
     id: string;
     email: string;
-    username?: string;
     createdAt: string;
     isAdult: boolean;
 }
 
-export interface Friend {
-    id: string; // Friendship ID
-    friendId: string; // The other user's ID
-    username?: string;
-    email: string;
-    isAdult: boolean;
-    status: FriendshipStatus;
-    isIncoming: boolean;
-    isOutgoing: boolean;
-    alias?: string;
-}
-
-export type FriendshipStatus = 'PENDING' | 'ACCEPTED';
-
 export interface UserProfile {
     id: string;
     displayName?: string;
-    username?: string;
     interest?: string;
     isOnline: boolean;
 }

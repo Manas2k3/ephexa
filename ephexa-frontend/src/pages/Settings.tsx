@@ -7,25 +7,10 @@ export function Settings() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Username edit state
-    const [isEditingUsername, setIsEditingUsername] = useState(false);
-    const [newUsername, setNewUsername] = useState('');
-    const [isUpdating, setIsUpdating] = useState(false);
-
-    const { user, logout, deleteAccount, updateProfile } = useAuth();
+    const { user, logout, deleteAccount } = useAuth();
 
     const handleLogout = () => {
         logout();
-    };
-
-    const handleUpdateUsername = async () => {
-        if (!newUsername.trim()) return;
-        setIsUpdating(true);
-        const success = await updateProfile({ username: newUsername });
-        setIsUpdating(false);
-        if (success) {
-            setIsEditingUsername(false);
-        }
     };
 
     const handleDeleteAccount = async () => {
@@ -47,40 +32,6 @@ export function Settings() {
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Email</label>
                             <p className="text-gray-100">{user?.email || 'Not available'}</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-gray-400 mb-1">Username</label>
-                            {isEditingUsername ? (
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newUsername}
-                                        onChange={(e) => setNewUsername(e.target.value)}
-                                        className="bg-navy border border-indigo/30 rounded-lg px-3 py-1 text-gray-100 focus:outline-none focus:border-indigo"
-                                        placeholder="Enter username"
-                                    />
-                                    <Button size="sm" onClick={handleUpdateUsername} isLoading={isUpdating}>
-                                        Save
-                                    </Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setIsEditingUsername(false)}>
-                                        Cancel
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <p className="text-gray-100">{user?.username || 'Not set'}</p>
-                                    <button
-                                        onClick={() => {
-                                            setNewUsername(user?.username || '');
-                                            setIsEditingUsername(true);
-                                        }}
-                                        className="text-xs text-indigo hover:text-indigo-light"
-                                    >
-                                        Edit
-                                    </button>
-                                </div>
-                            )}
                         </div>
 
                         <div>
