@@ -17,6 +17,11 @@ export function VideoCall() {
     const { isConnected } = useChatStore();
     const socketReady = isConnected;
 
+    // Memoize the callback to prevent useWebRTC options from changing on every render
+    const handleCallEndedCb = useCallback((reason: string) => {
+        setEndReason(reason);
+    }, []);
+
     const {
         callState,
         peerId,
@@ -32,9 +37,7 @@ export function VideoCall() {
         setLocalVideoElement,
         setRemoteVideoElement,
     } = useWebRTC({
-        onCallEnded: (reason) => {
-            setEndReason(reason);
-        },
+        onCallEnded: handleCallEndedCb,
     });
 
     const handleStartCall = useCallback(() => {
