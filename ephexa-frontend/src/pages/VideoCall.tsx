@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Layout } from '../components/layout';
 import { Button } from '../components/ui';
 import { useWebRTC } from '../hooks/useWebRTC';
@@ -17,10 +17,14 @@ export function VideoCall() {
     const { isConnected } = useChatStore();
     const socketReady = isConnected;
 
-    // Memoize the callback to prevent useWebRTC options from changing on every render
+    // Memoize the callback and options object to prevent re-renders
     const handleCallEndedCb = useCallback((reason: string) => {
         setEndReason(reason);
     }, []);
+
+    const webRTCOptions = useMemo(() => ({
+        onCallEnded: handleCallEndedCb,
+    }), [handleCallEndedCb]);
 
     const {
         callState,
@@ -36,9 +40,7 @@ export function VideoCall() {
         toggleVideo,
         setLocalVideoElement,
         setRemoteVideoElement,
-    } = useWebRTC({
-        onCallEnded: handleCallEndedCb,
-    });
+    } = useWebRTC(webRTCOptions);
 
     const handleStartCall = useCallback(() => {
         setEndReason(null);
