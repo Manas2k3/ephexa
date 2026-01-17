@@ -84,6 +84,9 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
     // Create RTCPeerConnection
     const createPeerConnection = useCallback(async () => {
+        console.log('createPeerConnection called');
+        console.log('localStream exists:', !!localStream.current);
+
         const pc = new RTCPeerConnection(iceServers);
         peerConnection.current = pc;
 
@@ -95,9 +98,14 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
 
         // Add local tracks to connection
         if (localStream.current) {
-            localStream.current.getTracks().forEach(track => {
+            const tracks = localStream.current.getTracks();
+            console.log('Adding', tracks.length, 'tracks to peer connection');
+            tracks.forEach(track => {
+                console.log('Adding track:', track.kind, track.label);
                 pc.addTrack(track, localStream.current!);
             });
+        } else {
+            console.error('WARNING: No local stream when creating peer connection!');
         }
 
         // Handle incoming tracks
