@@ -3,12 +3,19 @@ import { useState, useCallback } from 'react';
 import { Layout } from '../components/layout';
 import { Button } from '../components/ui';
 import { useWebRTC } from '../hooks/useWebRTC';
+import { useSocket } from '../hooks/useSocket';
+import { useChatStore } from '../stores/chatStore';
 import { INTEREST_CATEGORIES } from '../types';
 
 export function VideoCall() {
     const navigate = useNavigate();
     const [selectedInterest, setSelectedInterest] = useState<string | undefined>(undefined);
     const [endReason, setEndReason] = useState<string | null>(null);
+
+    // Ensure socket is connected (useSocket establishes the connection)
+    useSocket();
+    const { isConnected } = useChatStore();
+    const socketReady = isConnected;
 
     const {
         callState,
@@ -118,9 +125,12 @@ export function VideoCall() {
                                             </svg>
                                         </div>
                                         <h2 className="text-xl font-semibold text-gray-100 mb-2">Ready to Chat?</h2>
-                                        <p className="text-gray-400 mb-6">Click start to match with a random stranger</p>
-                                        <Button size="lg" onClick={handleStartCall}>
-                                            Start Video Call
+                                        <p className="text-gray-400 mb-4">Click start to match with a random stranger</p>
+                                        {!socketReady && (
+                                            <p className="text-yellow-400 text-sm mb-4">Connecting to server...</p>
+                                        )}
+                                        <Button size="lg" onClick={handleStartCall} disabled={!socketReady}>
+                                            {socketReady ? 'Start Video Call' : 'Connecting...'}
                                         </Button>
                                     </>
                                 )}
