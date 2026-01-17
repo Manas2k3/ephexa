@@ -123,7 +123,7 @@ export function Login() {
                                 onError={handleGoogleError}
                                 theme="filled_black"
                                 size="large"
-                                width="100%"
+                                width="300"
                                 text="continue_with"
                                 shape="rectangular"
                             />
