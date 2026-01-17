@@ -153,7 +153,7 @@ class SocketService {
     }
 
     // ==========================================
-    // WEBRTC CALL ACTIONS
+    // CALL MATCHING ACTIONS
     // ==========================================
 
     findCall(interest?: string): void {
@@ -170,18 +170,6 @@ class SocketService {
 
     nextCall(interest?: string): void {
         this.socket?.emit('next_call', { interest });
-    }
-
-    sendOffer(sdp: RTCSessionDescriptionInit): void {
-        this.socket?.emit('webrtc_offer', { sdp });
-    }
-
-    sendAnswer(sdp: RTCSessionDescriptionInit): void {
-        this.socket?.emit('webrtc_answer', { sdp });
-    }
-
-    sendIceCandidate(candidate: RTCIceCandidateInit): void {
-        this.socket?.emit('ice_candidate', { candidate });
     }
 
     // ==========================================
@@ -225,15 +213,27 @@ class SocketService {
     }
 
     // ==========================================
-    // WEBRTC CALL EVENT LISTENERS
+    // CALL EVENT LISTENERS
     // ==========================================
 
     onCallFound(callback: (data: CallFoundPayload) => void): void {
         this.onCallFoundCallback = callback;
     }
 
+    offCallFound(callback: (data: CallFoundPayload) => void): void {
+        if (this.onCallFoundCallback === callback) {
+            this.onCallFoundCallback = undefined;
+        }
+    }
+
     onCallEnded(callback: (data: { reason: string }) => void): void {
         this.onCallEndedCallback = callback;
+    }
+
+    offCallEnded(callback: (data: { reason: string }) => void): void {
+        if (this.onCallEndedCallback === callback) {
+            this.onCallEndedCallback = undefined;
+        }
     }
 
     onPeerDisconnected(callback: () => void): void {
@@ -242,10 +242,6 @@ class SocketService {
 
     onSearching(callback: () => void): void {
         this.onSearchingCallback = callback;
-    }
-
-    onWebRTCOffer(callback: (data: { sdp: RTCSessionDescriptionInit }) => void): void {
-        this.onWebRTCOfferCallback = callback;
     }
 
     onWebRTCAnswer(callback: (data: { sdp: RTCSessionDescriptionInit }) => void): void {
