@@ -3,12 +3,11 @@ import { socketService } from '../services/socket';
 import type { CallState, CallFoundPayload } from '../types';
 
 // ICE Server configuration (STUN/TURN) - using free servers
-// ICE Server configuration (STUN/TURN)
 const iceServers: RTCConfiguration = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:global.stun.twilio.com:3478' },
-        // OpenRelay (Free TURN) - reliable for testing
+        // OpenRelay (Free TURN)
         {
             urls: 'turn:openrelay.metered.ca:80',
             username: 'openrelayproject',
