@@ -144,9 +144,14 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
             }
         };
 
-        // Handle ICE errors
-        pc.onicecandidateerror = (event: any) => { // Type 'RTCPeerConnectionIceErrorEvent' is not standard in all TS lib
-            console.error('ICE Candidate Error:', event.errorText || event);
+        // Handle ICE gathering state
+        pc.onicegatheringstatechange = () => {
+            console.log('ICE gathering state:', pc.iceGatheringState);
+        };
+
+        // Handle ICE connection state
+        pc.oniceconnectionstatechange = () => {
+            console.log('ICE connection state:', pc.iceConnectionState);
         };
 
         // Handle connection state
@@ -160,9 +165,9 @@ export function useWebRTC(options: UseWebRTCOptions = {}) {
             }
         };
 
-        // Handle ICE connection state
-        pc.oniceconnectionstatechange = () => {
-            console.log('ICE state:', pc.iceConnectionState);
+        // Handle ICE errors with detail
+        pc.onicecandidateerror = (event: any) => {
+            console.error('ICE Candidate Error:', event.errorCode, event.errorText, event.url);
         };
 
         // Process any pending ICE candidates
