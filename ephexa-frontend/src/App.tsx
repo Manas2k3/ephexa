@@ -59,7 +59,19 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// ... imports
+import { api } from './services/api';
+import { useEffect } from 'react';
+
+// ... (other components)
+
 export default function App() {
+  const token = useAuthStore((state) => state.token);
+
+  useEffect(() => {
+    api.setToken(token);
+  }, [token]);
+
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BrowserRouter>

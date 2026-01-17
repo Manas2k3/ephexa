@@ -32,6 +32,7 @@ class ApiService {
             const response = await fetch(`${API_URL}${endpoint}`, {
                 ...options,
                 headers,
+                credentials: 'include',
             });
 
             const data = await response.json();
