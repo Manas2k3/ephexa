@@ -139,4 +139,9 @@ process.on('SIGTERM', async () => {
     });
 });
 
+// Export getIO function to access socket.io instance from other modules
+export function getIO() {
+    return io;
+}
+
 start();

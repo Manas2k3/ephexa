@@ -92,7 +92,7 @@ export interface ServerToClientEvents {
     peer_disconnected: () => void;
 
     // Friend Events
-    friend_request_received: (data: { requestId: string; senderId: string; metVia: string }) => void;
+    friend_request_received: (data: { requestId: string; senderId: string; metVia: string; sender: { id: string; email: string } }) => void;
     friend_request_accepted: (data: { requestId: string; friendId: string }) => void;
     friend_added: (data: { friendId: string }) => void;
 }

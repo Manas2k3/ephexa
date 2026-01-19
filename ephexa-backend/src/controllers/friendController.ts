@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express';
 import * as friendService from '../services/friendService';
+import { getIO } from '../app';
+import { getUserSocket } from '../config/redis';
 
 // Send a friend request
 export async function sendFriendRequest(req: Request, res: Response) {
@@ -27,6 +29,23 @@ export async function sendFriendRequest(req: Request, res: Response) {
             metVia,
             metRoomId
         );
+
+        // Emit socket event to receiver if they're online
+        try {
+            const receiverSocketId = await getUserSocket(receiverId);
+            if (receiverSocketId) {
+                const io = getIO();
+                io.to(receiverSocketId).emit('friend_request_received', {
+                    requestId: request.id,
+                    senderId: userId,
+                    metVia: request.metVia,
+                    sender: request.sender
+                });
+            }
+        } catch (socketError) {
+            console.error('Failed to emit friend request notification:', socketError);
+            // Don't fail the request if socket emission fails
+        }
 
         res.status(201).json({
             success: true,

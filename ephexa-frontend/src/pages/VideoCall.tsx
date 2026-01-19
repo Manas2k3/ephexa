@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Layout } from '../components/layout';
 import { Button } from '../components/ui';
-import { AddFriendButton } from '../components/friends';
+import { AddFriendButton, IncomingFriendRequestNotification } from '../components/friends';
 import { useSocket } from '../hooks/useSocket';
 import { useFriends } from '../hooks/useFriends';
 import { useChatStore } from '../stores/chatStore';
@@ -9,15 +9,17 @@ import { useAuthStore } from '../stores/authStore';
 import { INTEREST_CATEGORIES } from '../types';
 import { ZegoCall } from './ZegoCall';
 import { socketService } from '../services/socket';
+import type { FriendRequest } from '../stores/friendStore';
 
 export function VideoCall() {
     const [selectedInterest, setSelectedInterest] = useState<string | undefined>(undefined);
     const [isSearching, setIsSearching] = useState(false);
     const [callId, setCallId] = useState<string | null>(null);
     const [peerId, setPeerId] = useState<string | null>(null);
+    const [incomingRequest, setIncomingRequest] = useState<FriendRequest | null>(null);
     const { isConnected } = useChatStore();
     const { user } = useAuthStore();
-    const { sendFriendRequest } = useFriends();
+    const { sendFriendRequest, acceptFriendRequest, declineFriendRequest } = useFriends();
 
     // Initial connection check
     useSocket();
@@ -50,7 +52,7 @@ export function VideoCall() {
         }, 100);
     }, [selectedInterest]);
 
-    // Socket listeners for matching
+    // Socket listeners for matching and friend requests
     useEffect(() => {
         const handleCallFound = (data: { callId: string; peerId: string; isInitiator: boolean }) => {
             console.log('Call found:', data);
@@ -77,6 +79,33 @@ export function VideoCall() {
             socketService.cancelFind();
         };
     }, []);
+
+    // Listen for incoming friend requests
+    useEffect(() => {
+        if (!isConnected) return;
+
+        const socket = socketService['socket'];
+        if (!socket) return;
+
+        const handleFriendRequestReceived = (data: { requestId: string; senderId: string; metVia: string; sender: { id: string; email: string } }) => {
+            console.log('[VideoCall] Friend request received:', data);
+            setIncomingRequest({
+                id: data.requestId,
+                senderId: data.senderId,
+                status: 'PENDING',
+                metVia: data.metVia as 'CHAT' | 'VIDEO_CALL',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                sender: data.sender
+            } as FriendRequest);
+        };
+
+        socket.on('friend_request_received', handleFriendRequestReceived);
+
+        return () => {
+            socket.off('friend_request_received', handleFriendRequestReceived);
+        };
+    }, [isConnected]);
 
 
     // Render Zego Call if active
@@ -107,6 +136,16 @@ export function VideoCall() {
                         End Call
                     </Button>
                 </div>
+
+                {/* Incoming friend request notification */}
+                {incomingRequest && (
+                    <IncomingFriendRequestNotification
+                        request={incomingRequest}
+                        onAccept={acceptFriendRequest}
+                        onDecline={declineFriendRequest}
+                        onDismiss={() => setIncomingRequest(null)}
+                    />
+                )}
             </div>
         );
     }
