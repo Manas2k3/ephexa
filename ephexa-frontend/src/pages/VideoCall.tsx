@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Layout } from '../components/layout';
 import { Button } from '../components/ui';
+import { AddFriendButton } from '../components/friends';
 import { useSocket } from '../hooks/useSocket';
+import { useFriends } from '../hooks/useFriends';
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 import { INTEREST_CATEGORIES } from '../types';
@@ -12,8 +14,10 @@ export function VideoCall() {
     const [selectedInterest, setSelectedInterest] = useState<string | undefined>(undefined);
     const [isSearching, setIsSearching] = useState(false);
     const [callId, setCallId] = useState<string | null>(null);
+    const [peerId, setPeerId] = useState<string | null>(null);
     const { isConnected } = useChatStore();
     const { user } = useAuthStore();
+    const { sendFriendRequest } = useFriends();
 
     // Initial connection check
     useSocket();
@@ -31,6 +35,7 @@ export function VideoCall() {
 
     const handleEndCall = useCallback(() => {
         setCallId(null);
+        setPeerId(null);
         socketService.endCall(); // Notify backend we left
         // Optionally restart search automatically or go back to idle
         setIsSearching(false);
@@ -51,12 +56,14 @@ export function VideoCall() {
             console.log('Call found:', data);
             setIsSearching(false);
             setCallId(data.callId);
+            setPeerId(data.peerId);
         };
 
         const handleCallEnded = (data: { reason: string }) => {
             console.log('Peer ended call:', data.reason);
             // Zego handles the UI for ending, but we reset state here
             setCallId(null);
+            setPeerId(null);
             setIsSearching(false);
         };
 
@@ -85,6 +92,14 @@ export function VideoCall() {
 
                 {/* Overlay controls if needed, or rely on Zego UI */}
                 <div className="absolute top-4 right-4 z-[60] flex gap-2">
+                    {peerId && (
+                        <AddFriendButton
+                            peerId={peerId}
+                            metVia="VIDEO_CALL"
+                            metRoomId={callId}
+                            onSendRequest={sendFriendRequest}
+                        />
+                    )}
                     <Button variant="secondary" onClick={handleNextCall}>
                         Skip & Next
                     </Button>

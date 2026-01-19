@@ -29,6 +29,12 @@ model User {
   reportedBy    Report[] @relation("Reported")
   blockedUsers  Block[] @relation("Blocker")
   blockedBy     Block[] @relation("Blocked")
+  
+  // Friendship relations
+  friends                  Friendship[]    @relation("UserFriends")
+  friendOf                 Friendship[]    @relation("FriendOf")
+  sentFriendRequests       FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests   FriendRequest[] @relation("ReceivedFriendRequests")
 }
 
 model Session {
@@ -119,4 +125,51 @@ enum ReportStatus {
   REVIEWED
   ACTIONED
   DISMISSED
+}
+
+// Friends Feature
+enum MetVia {
+  CHAT
+  VIDEO_CALL
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model Friendship {
+  id          String   @id @default(uuid())
+  userId      String   // The user who has this friend
+  friendId    String   // The friend's user ID
+  alias       String?  // Custom alias/nickname for the friend
+  metVia      MetVia   // How they met (CHAT or VIDEO_CALL)
+  metRoomId   String?  // Optional: the room/call where they met
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend      User     @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+}
+
+model FriendRequest {
+  id          String              @id @default(uuid())
+  senderId    String
+  receiverId  String
+  status      FriendRequestStatus @default(PENDING)
+  metVia      MetVia
+  metRoomId   String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  sender      User   @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User   @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
 }

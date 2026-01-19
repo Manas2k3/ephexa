@@ -15,6 +15,7 @@ import { setupSocketHandlers } from './socket';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
 import userRoutes from './routes/user';
+import friendRoutes from './routes/friends';
 
 // Types
 import type {
@@ -78,6 +79,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {

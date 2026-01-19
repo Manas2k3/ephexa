@@ -2,13 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { Layout } from '../components/layout';
 import { Button } from '../components/ui';
 import { ChatListItem, MessageBubble, MessageInput, TypingIndicator, NewChatModal, ReportModal } from '../components/chat';
+import { FriendsModal } from '../components/friends';
 import { useChat } from '../hooks/useChat';
+import { useFriends } from '../hooks/useFriends';
 import { useUIStore } from '../stores/uiStore';
 import { useChatStore } from '../stores/chatStore';
 import type { ReportReason } from '../types';
 
 export function Dashboard() {
     const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+    const [isFriendsModalOpen, setIsFriendsModalOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -34,6 +37,16 @@ export function Dashboard() {
     } = useUIStore();
 
     const { isConnected } = useChatStore();
+
+    const {
+        friends,
+        pendingRequests,
+        isLoading: isFriendsLoading,
+        acceptFriendRequest,
+        declineFriendRequest,
+        updateFriendAlias,
+        removeFriend,
+    } = useFriends();
 
     // Scroll to bottom when new messages arrive
     useEffect(() => {
@@ -89,6 +102,22 @@ export function Dashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
                             Video Call
+                        </Button>
+                        <Button
+                            fullWidth
+                            variant="ghost"
+                            onClick={() => setIsFriendsModalOpen(true)}
+                            className="mt-2 relative"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Friends
+                            {pendingRequests.length > 0 && (
+                                <span className="absolute top-1 right-3 w-5 h-5 bg-indigo-500 text-white text-xs rounded-full flex items-center justify-center">
+                                    {pendingRequests.length}
+                                </span>
+                            )}
                         </Button>
                     </div>
 
@@ -221,6 +250,18 @@ export function Dashboard() {
                 isOpen={isReportModalOpen}
                 onClose={closeReportModal}
                 onSubmit={handleReportSubmit}
+            />
+
+            <FriendsModal
+                isOpen={isFriendsModalOpen}
+                onClose={() => setIsFriendsModalOpen(false)}
+                friends={friends}
+                pendingRequests={pendingRequests}
+                isLoading={isFriendsLoading}
+                onAcceptRequest={acceptFriendRequest}
+                onDeclineRequest={declineFriendRequest}
+                onUpdateAlias={updateFriendAlias}
+                onRemoveFriend={removeFriend}
             />
         </Layout>
     );

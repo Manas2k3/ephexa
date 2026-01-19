@@ -90,6 +90,11 @@ export interface ServerToClientEvents {
     webrtc_answer: (data: { sdp: RTCSessionDescriptionInit }) => void;
     ice_candidate: (data: { candidate: RTCIceCandidateInit }) => void;
     peer_disconnected: () => void;
+
+    // Friend Events
+    friend_request_received: (data: { requestId: string; senderId: string; metVia: string }) => void;
+    friend_request_accepted: (data: { requestId: string; friendId: string }) => void;
+    friend_added: (data: { friendId: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -106,6 +111,9 @@ export interface ClientToServerEvents {
     webrtc_offer: (data: { sdp: RTCSessionDescriptionInit }) => void;
     webrtc_answer: (data: { sdp: RTCSessionDescriptionInit }) => void;
     ice_candidate: (data: { candidate: RTCIceCandidateInit }) => void;
+
+    // Friend Events
+    send_friend_request: (data: { receiverId: string; metVia: string; metRoomId?: string }) => void;
 }
 
 export interface InterServerEvents {
